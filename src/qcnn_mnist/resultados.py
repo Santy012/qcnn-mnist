@@ -149,6 +149,42 @@ def tabla_markdown(resumenes: dict[str, Resumen], modelos: list[str] | None = No
     return "\n".join(filas)
 
 
+def tabla_ganancias(resumenes: dict[str, Resumen], pasos: list[tuple[str, str, str]]) -> str:
+    """Tabla Markdown de la ganancia media de accuracy de prueba en cada paso ``(de, a, qué cambia)``."""
+    filas = ["| Paso | Ganancia (puntos) | Qué cambia |", "| --- | ---: | --- |"]
+    for a, b, cambia in pasos:
+        g = 100 * (resumenes[b].acc_test_media - resumenes[a].acc_test_media)
+        filas.append(f"| {resumenes[a].nombre} → {resumenes[b].nombre} | {num(g, signo=True)} | {cambia} |")
+    return "\n".join(filas)
+
+
+# Pasos que separan el efecto de los datos del de la lectura al pasar de v2 a v3.
+PASOS_V2_V3 = [
+    ("qcnn_v2", "qcnn_v3", "lectura, resolución, parches, qubits y pooling"),
+    ("cpn_10", "cpn_16", "resolución y parches"),
+    ("cnn_10", "cnn_16", "resolución y parches"),
+]
+ABLACIONES = ["v3_congelado", "v3_sin_entrelazamiento", "v3_solo_clasico", "cpn_16"]
+
+
+def tabla_diferencias(resultados: dict[str, list[dict]], referencia: str, modelos: list[str]) -> str:
+    """Tabla Markdown de la diferencia de accuracy de prueba de cada modelo con ``referencia``,
+    en puntos porcentuales: media y por semilla (emparejadas por número de semilla)."""
+    ref = {c["semilla"]: c["acc_test"] for c in resultados[referencia]}
+    semillas = sorted(ref)
+    filas = [
+        f"| Modelo | Parámetros | Diferencia con {NOMBRES[referencia]} (puntos) | Por semilla ({' / '.join(map(str, semillas))}) |",
+        "| --- | ---: | ---: | --- |",
+    ]
+    for m in modelos:
+        r = resumir(resultados[m])
+        acc = {c["semilla"]: c["acc_test"] for c in resultados[m]}
+        d = np.array([100 * (acc[s] - ref[s]) for s in semillas])
+        por_semilla = " / ".join(num(x, signo=True) for x in d)
+        filas.append(f"| {r.nombre} | {r.n_parametros} | {num(d.mean(), signo=True)} | {por_semilla} |")
+    return "\n".join(filas)
+
+
 def cargar_parametros(modelo: str, semilla: int, directorio: Path = DIRECTORIO_RESULTADOS) -> tuple[dict, dict]:
     """Parámetros finales guardados: ``(entrenables, fijos)``."""
     with np.load(Path(directorio) / modelo / f"semilla_{semilla}_params.npz") as f:

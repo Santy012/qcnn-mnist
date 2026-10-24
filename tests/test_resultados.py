@@ -1,6 +1,7 @@
 """Agregación de resultados y ejecución de los notebooks."""
 
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -82,6 +83,27 @@ def test_resultados_del_estudio_completos():
         pytest.skip("Sin resultados en results/")
     assert set(r) == set(res.ORDEN)
     assert all([c["semilla"] for c in corridas] == [42, 43, 44] for corridas in r.values())
+
+
+def test_actualizar_bloques_del_readme():
+    sys.path.insert(0, str(RAIZ / "scripts"))
+    from actualizar_readme import actualizar
+
+    texto = "a\n<!-- resultados:t -->\nviejo\n<!-- /resultados:t -->\nb"
+    assert actualizar(texto, {"t": "| nueva |"}) == "a\n<!-- resultados:t -->\n| nueva |\n<!-- /resultados:t -->\nb"
+    with pytest.raises(ValueError):
+        actualizar(texto, {"otro": "x"})
+
+
+def test_readme_al_dia_con_results():
+    """Las tablas del README coinciden con las que se generan desde ``results/``."""
+    if not res.cargar():
+        pytest.skip("Sin resultados en results/")
+    sys.path.insert(0, str(RAIZ / "scripts"))
+    from actualizar_readme import README, actualizar, bloques
+
+    texto = README.read_text(encoding="utf-8")
+    assert actualizar(texto, bloques()) == texto, "Ejecutar: python scripts/actualizar_readme.py"
 
 
 @pytest.mark.notebooks
