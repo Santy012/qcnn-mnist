@@ -33,6 +33,16 @@ ORDEN = [
 ]
 
 
+def evitar_suspension() -> None:
+    """En Windows, pide que el equipo no se suspenda por inactividad mientras el
+    proceso corre. Se libera sola al terminar. No impide la suspensión al cerrar la tapa."""
+    if sys.platform == "win32":
+        import ctypes
+
+        ES_CONTINUOUS, ES_SYSTEM_REQUIRED = 0x80000000, 0x00000001
+        ctypes.windll.kernel32.SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED)
+
+
 def informar(mensaje: str) -> None:
     print(f"[{datetime.now():%H:%M:%S}] {mensaje}", flush=True)
 
@@ -66,6 +76,7 @@ def main() -> int:
         for r in rutas
     ]
 
+    evitar_suspension()
     # Semilla por semilla: si la corrida se corta, queda al menos una semilla de todo.
     semillas = sorted({s for c in configs for s in c.semillas})
     errores = 0
