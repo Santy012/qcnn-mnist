@@ -1,0 +1,15 @@
+# Hiperparámetros comunes a todo el estudio.
+modelo = "v3_campo_medio"
+
+[entrenamiento]
+lr = 0.01
+epocas = 30
+lote = 16
+semillas = [42, 43, 44]
+n_train = 2000
+n_test = 500
+
+[simulador]
+# Sin PennyLane: el estado producto se simula directamente en JAX (ver modelos/campo_medio.py).
+dispositivo = "campo_medio_jax"
+diff_method = "backprop"

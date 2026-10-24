@@ -29,6 +29,7 @@ def bloques() -> dict[str, str]:
         "todos": res.tabla_markdown(s, res.ORDEN),
         "v2_v3": res.tabla_ganancias(s, res.PASOS_V2_V3),
         "ablaciones": res.tabla_diferencias(r, "qcnn_v3", res.ABLACIONES),
+        "entrelazamiento": res.tabla_diferencias(r, "v3_sin_entrelazamiento", res.ENTRELAZAMIENTO),
     }
 
 

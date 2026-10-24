@@ -10,8 +10,10 @@ from qcnn_mnist.modelos import CONSTRUCTORES, construir_modelo
 CONTEO = {
     "qcnn_v1": 26,
     "qcnn_v2": 64,
+    "v2_lectura_z": 114,
     "qcnn_v3": 180,
     "v3_sin_entrelazamiento": 180,
+    "v3_campo_medio": 180,
     "v3_congelado": 84,
     "v3_solo_clasico": 204,
     "cnn_10": 225,

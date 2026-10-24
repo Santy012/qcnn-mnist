@@ -34,6 +34,8 @@ COLORES = {
     "cpn_16": "#eb6834",
     "cnn_10": "#1baf7a",
     "cnn_16": "#1baf7a",
+    "v2_lectura_z": "#e34948",
+    "v3_campo_medio": "#eda100",
     "v3_sin_entrelazamiento": "#6250d6",
     "v3_congelado": "#e87ba4",
     "v3_solo_clasico": "#008300",
@@ -87,10 +89,14 @@ def guardar(fig, nombre: str, directorio: Path = DIRECTORIO_FIGURAS) -> Path:
     return ruta
 
 
-def curvas(ax, resultados: dict[str, list[dict]], modelos: list[str], clave: str, semillas: bool = True):
+def curvas(
+    ax, resultados: dict[str, list[dict]], modelos: list[str], clave: str, semillas: bool = True, etiquetas: bool = True
+):
     """Media por época (línea) ± desviación (banda) de ``clave``; las semillas, en trazo fino.
 
     ``clave``: ``"perdida_train"`` o ``"acc_test_por_epoca"``. La accuracy se muestra en %.
+    ``etiquetas=False`` quita el nombre al final de cada curva (cuando las curvas acaban juntas
+    y la leyenda basta).
     """
     escala = 100 if clave.startswith("acc") else 1
     for m in modelos:
@@ -103,10 +109,11 @@ def curvas(ax, resultados: dict[str, list[dict]], modelos: list[str], clave: str
         media, desv = s.mean(0), s.std(0, ddof=1) if len(s) > 1 else np.zeros(s.shape[1])
         ax.fill_between(epocas, media - desv, media + desv, color=color, alpha=0.15, linewidth=0)
         ax.plot(epocas, media, color=color, label=NOMBRES[m])
-        ax.annotate(
-            NOMBRES[m], (epocas[-1], media[-1]), xytext=(6, 0), textcoords="offset points",
-            va="center", fontsize=9, color=TINTA_SECUNDARIA,
-        )
+        if etiquetas:
+            ax.annotate(
+                NOMBRES[m], (epocas[-1], media[-1]), xytext=(6, 0), textcoords="offset points",
+                va="center", fontsize=9, color=TINTA_SECUNDARIA,
+            )
     ax.set_xlabel("Época")
     ax.set_ylabel("Accuracy de prueba (%)" if escala == 100 else "Pérdida de entrenamiento")
     ax.set_xlim(1, None)

@@ -26,8 +26,10 @@ ORDEN = [
     "cpn_16",
     "qcnn_v1",
     "qcnn_v2",
+    "v2_lectura_z",
     "qcnn_v3",
     "v3_solo_clasico",
+    "v3_campo_medio",
     "v3_congelado",
     "v3_sin_entrelazamiento",
 ]

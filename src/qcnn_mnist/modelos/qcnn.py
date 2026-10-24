@@ -15,6 +15,7 @@ from qcnn_mnist.modelos.base import (
     bias_entrada,
     he,
 )
+from qcnn_mnist.modelos import campo_medio
 from qcnn_mnist.modelos.circuitos import (
     codificar,
     conv_ry,
@@ -74,6 +75,20 @@ class QCNNv1(LecturaProbabilidades):
         return self.circuito(ang, entrenables["theta1"], entrenables["theta2"])
 
 
+def compuertas_v2(angulos, theta1, theta2, n_qubits: int = 10):
+    """Compuertas del circuito de v2, sin medición (las comparten v2 y su ablación de lectura)."""
+    wires = list(range(n_qubits))
+    codificar(angulos, wires)
+    conv_rot(theta1, wires)
+    for a, b in POOL1_V12:
+        qml.CNOT(wires=[a, b])
+    for q in SUPERVIVIENTES1_V12:  # re-uploading del dato original de cada qubit
+        qml.RY(angulos[..., q], wires=q)
+    conv_rot(theta2, SUPERVIVIENTES1_V12)
+    for a, b in POOL2_V12:
+        qml.CNOT(wires=[a, b])
+
+
 class QCNNv2(LecturaProbabilidades):
     """v2: como v1 con ``Rot`` SU(2), *re-uploading* antes de la segunda convolución
     y bias de entrada entrenable; λ = 0,1."""
@@ -85,16 +100,7 @@ class QCNNv2(LecturaProbabilidades):
     def __init__(self, dispositivo: str = "default.qubit", diff_method: str = "best"):
         @_qnode(self.n_qubits, dispositivo, diff_method)
         def circuito(angulos, theta1, theta2):
-            wires = list(range(self.n_qubits))
-            codificar(angulos, wires)
-            conv_rot(theta1, wires)
-            for a, b in POOL1_V12:
-                qml.CNOT(wires=[a, b])
-            for q in SUPERVIVIENTES1_V12:  # re-uploading del dato original de cada qubit
-                qml.RY(angulos[..., q], wires=q)
-            conv_rot(theta2, SUPERVIVIENTES1_V12)
-            for a, b in POOL2_V12:
-                qml.CNOT(wires=[a, b])
+            compuertas_v2(angulos, theta1, theta2, self.n_qubits)
             return qml.probs(wires=SUPERVIVIENTES2_V12)
 
         self.circuito = circuito
@@ -113,6 +119,45 @@ class QCNNv2(LecturaProbabilidades):
     def salida(self, entrenables, fijos, x):
         ang = self.angulos(entrenables["W"], entrenables["b"], x)
         return self.circuito(ang, entrenables["theta1"], entrenables["theta2"])
+
+
+class QCNNv2LecturaZ(Modelo):
+    """Ablación de lectura: el circuito de v2 sin cambios, medido con ⟨Z⟩ de los 4 qubits
+    finales y una capa lineal 4 → 10 con bias. Entropía cruzada, sin λ.
+
+    Aísla el efecto de la lectura: respecto de v2 solo cambia cómo se lee el circuito;
+    respecto de v3 conserva la imagen 10×10, los 10 qubits y el pooling fijo.
+    """
+
+    nombre = "v2_lectura_z"
+    tam_imagen, tam_parche, n_parches, n_qubits = 10, 2, 10, 10
+
+    def __init__(self, dispositivo: str = "default.qubit", diff_method: str = "best"):
+        @_qnode(self.n_qubits, dispositivo, diff_method)
+        def circuito(angulos, theta1, theta2):
+            compuertas_v2(angulos, theta1, theta2, self.n_qubits)
+            return [qml.expval(qml.PauliZ(w)) for w in SUPERVIVIENTES2_V12]
+
+        self.circuito = circuito
+
+    def inicializar(self, clave):
+        k1, k2, k3, k4, k5 = jax.random.split(clave, 5)
+        d = self.tam_parche**2
+        entrenables = {
+            "W": he(k1, (2, d)),
+            "b": bias_entrada(k2),
+            "theta1": angular(k3, (self.n_qubits, 3)),
+            "theta2": angular(k4, (len(SUPERVIVIENTES1_V12), 3)),
+            "W_out": he(k5, (N_CLASES, len(SUPERVIVIENTES2_V12))),
+            "b_out": jnp.zeros(N_CLASES),
+        }
+        return entrenables, {}
+
+    def salida(self, entrenables, fijos, x):
+        p = entrenables
+        ang = self.angulos(p["W"], p["b"], x)
+        z = jnp.stack(self.circuito(ang, p["theta1"], p["theta2"]), axis=-1)
+        return z @ p["W_out"].T + p["b_out"]
 
 
 class QCNNv3(Modelo):
@@ -185,3 +230,17 @@ class QCNNv3(Modelo):
         ang = self.angulos(p["W"], p["b"], x)
         z = jnp.stack(self.circuito(ang, *(p[n] for n in self.CUANTICOS)), axis=-1)
         return z @ p["W_out"].T + p["b_out"]
+
+
+class QCNNv3CampoMedio(QCNNv3):
+    """Ablación de entrelazamiento: v3 simulado como estado producto (campo medio).
+
+    Mismas compuertas de un qubit y mismos parámetros que v3; cada CNOT(c, t) se
+    sustituye por ``RX(π · p₁(c))`` sobre ``t`` (ver ``campo_medio``). Conserva el flujo
+    de información entre qubits sin crear correlaciones cuánticas.
+    """
+
+    def __init__(self, **_opciones_simulador):
+        self.entrelazar, self.congelar = True, False
+        self.nombre = "v3_campo_medio"
+        self.circuito = campo_medio.circuito_v3

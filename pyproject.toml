@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]  # licencia como expresión SPDX
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,6 +7,9 @@ name = "qcnn-mnist"
 version = "0.1.0"
 description = "Estudio de una red convolucional cuántica híbrida (QCNN) sobre MNIST frente a controles clásicos."
 requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Santiago Castellanos" }]
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -18,10 +18,12 @@ from qcnn_mnist.experimento import DIRECTORIO_RESULTADOS
 NOMBRES = {
     "qcnn_v1": "QCNN v1",
     "qcnn_v2": "QCNN v2",
+    "v2_lectura_z": "v2 con lectura ⟨Z⟩",
     "qcnn_v3": "QCNN v3",
-    "v3_sin_entrelazamiento": "v3 sin interacción entre qubits",
     "v3_congelado": "v3 con circuito congelado",
     "v3_solo_clasico": "v3 solo clásico",
+    "v3_campo_medio": "v3 en campo medio",
+    "v3_sin_entrelazamiento": "v3 sin interacción entre qubits",
     "cnn_10": "CNN 10×10",
     "cpn_10": "CPN 10×10",
     "cnn_16": "CNN 16×16",
@@ -34,6 +36,8 @@ FAMILIAS = {
     "qcnn_v1": "qcnn",
     "qcnn_v2": "qcnn",
     "qcnn_v3": "qcnn",
+    "v2_lectura_z": "ablacion",
+    "v3_campo_medio": "ablacion",
     "v3_sin_entrelazamiento": "ablacion",
     "v3_congelado": "ablacion",
     "v3_solo_clasico": "ablacion",
@@ -158,13 +162,20 @@ def tabla_ganancias(resumenes: dict[str, Resumen], pasos: list[tuple[str, str, s
     return "\n".join(filas)
 
 
-# Pasos que separan el efecto de los datos del de la lectura al pasar de v2 a v3.
+# Pasos que separan el efecto de la lectura del de la escala al pasar de v2 a v3.
 PASOS_V2_V3 = [
-    ("qcnn_v2", "qcnn_v3", "lectura, resolución, parches, qubits y pooling"),
+    ("qcnn_v2", "v2_lectura_z", "solo la lectura (⟨Z⟩ + capa lineal)"),
+    ("v2_lectura_z", "qcnn_v3", "resolución, parches, qubits y pooling"),
+    ("qcnn_v2", "qcnn_v3", "las dos cosas"),
     ("cpn_10", "cpn_16", "resolución y parches"),
     ("cnn_10", "cnn_16", "resolución y parches"),
 ]
-ABLACIONES = ["v3_congelado", "v3_sin_entrelazamiento", "v3_solo_clasico", "cpn_16"]
+EVOLUCION = ["qcnn_v1", "qcnn_v2", "v2_lectura_z", "qcnn_v3"]
+# Orden también elegido para que los colores vecinos se distingan con daltonismo.
+ABLACIONES = ["v3_congelado", "v3_solo_clasico", "v3_campo_medio", "v3_sin_entrelazamiento", "cpn_16"]
+# Frente a «sin interacción»: cuánto se recupera con flujo de información sin entrelazamiento
+# (campo medio) y con entrelazamiento (v3).
+ENTRELAZAMIENTO = ["v3_campo_medio", "qcnn_v3"]
 
 
 def tabla_diferencias(resultados: dict[str, list[dict]], referencia: str, modelos: list[str]) -> str:
