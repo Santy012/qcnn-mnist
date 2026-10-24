@@ -13,3 +13,5 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-m 'not notebooks'"
+markers = ["notebooks: ejecuta los notebooks completos (lento; correr con -m notebooks)"]
