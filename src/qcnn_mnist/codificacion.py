@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 import jax.numpy as jnp
 
 EPS_NORMA = 1e-8
@@ -20,6 +22,19 @@ def extraer_parches(imagenes, tam_parche: int):
     x = imagenes.reshape(*lote, nf, tam_parche, nc, tam_parche)
     x = jnp.moveaxis(x, -3, -2)  # (..., nf, nc, tam_parche, tam_parche)
     return x.reshape(*lote, nf * nc, tam_parche * tam_parche)
+
+
+def banda_central(parches, n: int):
+    """Selecciona ``n`` parches de filas completas centradas verticalmente en la rejilla.
+
+    ``parches`` tiene forma ``(..., lado², d)`` en orden por filas. Con una rejilla de
+    5×5 y ``n = 10`` devuelve las filas 1 y 2 (parches 5 a 14).
+    """
+    lado = math.isqrt(parches.shape[-2])
+    if lado * lado != parches.shape[-2] or n % lado:
+        raise ValueError(f"{n} parches no forman filas completas de una rejilla {lado}×{lado}.")
+    inicio = (lado - n // lado) // 2 * lado
+    return parches[..., inicio : inicio + n, :]
 
 
 def amplitudes(W, b, parche):
