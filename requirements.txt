@@ -1,0 +1,14 @@
+# Dependencias directas con versiones fijadas (Python 3.13).
+# jax se fija en 0.10.2: PennyLane 0.45 usa jax.core.is_concrete, retirado en jax 0.11.
+numpy==2.5.4
+jax==0.10.2
+jaxlib==0.10.2
+pennylane==0.45.1
+pennylane-lightning==0.45.0
+optax==0.2.8
+matplotlib==3.11.2
+pytest==9.1.1
+ipykernel==7.4.0
+
+# Paquete del proyecto (src/qcnn_mnist) en modo editable.
+-e .
