@@ -1,0 +1,14 @@
+# Hiperparámetros comunes a todo el estudio.
+modelo = "qcnn_v2"
+
+[entrenamiento]
+lr = 0.01
+epocas = 30
+lote = 16
+semillas = [42, 43, 44]
+n_train = 2000
+n_test = 500
+
+[simulador]
+dispositivo = "default.qubit"
+diff_method = "best"
