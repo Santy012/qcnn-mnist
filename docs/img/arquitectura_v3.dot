@@ -1,0 +1,11 @@
+digraph G { rankdir=LR; bgcolor="white"; pad=0.3; nodesep=0.35; ranksep=0.5;
+  node [shape=box, style="rounded,filled", fontname="DejaVu Sans", fontsize=12, color="#5b6b7f", fillcolor="#eef2f7", margin="0.18,0.08"];
+  edge [fontname="DejaVu Sans", fontsize=10, color="#5b6b7f", fontcolor="#3a4656"];
+  I [label="MNIST\n16×16"]; P [label="16 parches 4×4"];
+  L [label="Capa lineal\nparche → (α, β)"];
+  subgraph cluster_q { label="Circuito cuántico"; fontname="DejaVu Sans Bold"; fontsize=12; style="rounded,dashed"; color="#9aa7b6";
+    E [label="Codificación\nR_Y(θ) en 16 qubits", fillcolor="#fde9cf", color="#c98a2b"];
+    C1 [label="Convolución\nrotaciones + anillo CNOT"]; P1 [label="Pooling paramétrico\n16 → 8 → 4"]; Z [label="Lectura ⟨Z⟩\n4 qubits"]; }
+  O [label="Capa lineal 4 → 10\nclase", fillcolor="#e3f1e6", color="#4e8a5c"];
+  I -> P -> L -> E -> C1 -> P1 -> Z -> O;
+}

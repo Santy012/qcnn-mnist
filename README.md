@@ -35,6 +35,8 @@ Accuracy de prueba y de entrenamiento en %, media ± desviación estándar de 3 
 
 Las tres versiones comparten la misma idea: traducir una CNN pequeña a una QCNN. Cada parche de la imagen se comprime con una capa lineal entrenable a un par de amplitudes $(\alpha, \beta)$ que se cargan en un qubit con $R_Y(\theta)$, $\theta = 2\operatorname{arctan2}(\beta, \alpha)$; después, capas de convolución (rotaciones + anillo de CNOT) y pooling reducen el número de qubits en pirámide.
 
+![Arquitectura de la versión 3: parches 4×4, codificación en 16 qubits, pirámide de convolución y pooling, lectura ⟨Z⟩ y capa lineal](docs/img/arquitectura_v3.png)
+
 | Versión | Qué cambia | Qué se observa | Notebook |
 | --- | --- | --- | --- |
 | **v1** | 10×10, parches 2×2 (10 de la banda central), 10 qubits, pirámide 10 → 8 → 4 con $R_Y$ y anillo de CNOT. Lectura por probabilidades: 16 estados de 4 qubits, los 10 primeros son las clases y los 6 sobrantes se penalizan (λ = 0,3) | La pérdida se queda cerca de −log(1/16), el valor de una distribución uniforme; la accuracy de prueba oscila entre épocas y varía mucho entre semillas | [01](notebooks/01_v1_lectura_por_probabilidades.ipynb) |
